@@ -1,3 +1,100 @@
+## Análise baseada em CI
+
+Agora vamos inserir o SonarCloud no fluxo de nossa pipeline para criar algumas premissas de segurança.
+
+
+---
+
+###1. 
+Para isso vamos no Marketplace do GitHub Actions verificar se temos integração "nativa", ou seja, se a Sonar desenvolveu a integração com o Actions.
+
+https://github.com/marketplace?type=actions
+
+Busque por **SonarCloud**
+
+![](https://trello.com/1/cards/61e5d729d8533b4430c9c63f/attachments/61e5da2944324e05ef02d6af/download/image.png)
+
+---
+
+###2. 
+Veja que ele indica que temos 2 pré-requisitos:
+
+* Conta no Sonar que já criamos
+* Dentro da raiz do repositório termos um arquivo de instruções para o sonar.
+
+---
+
+###3. 
+Vamos entender como o SonarCloud funcionar antes de configurar:
+
+![](https://trello.com/1/cards/61666e79b67b2927f513b2fe/attachments/6173eae134b6ef0f37c8af49/download/image.png)
+
+
+Acesse  as informações do Projeto, basta ir no SonarCloud e no menu lateral clicar em Information:
+
+![](https://trello.com/1/cards/61e5d729d8533b4430c9c63f/attachments/61e5db75e50bc738ec5ba514/download/image.png)
+---
+
+###4. 
+Precisamos no SonarCloud alterar o método de análise para CI. Para isso basta desligar a análise automática. 
+
+**Antes**
+
+![](https://trello.com/1/cards/61e5d729d8533b4430c9c63f/attachments/61e5dc322dd72d645de497e0/download/image.png)
+
+
+**Depois**
+
+![](https://trello.com/1/cards/61e5d729d8533b4430c9c63f/attachments/61e5dc7ef1c127503a6c4320/download/image.png)
+
+---
+
+###5. 
+Podemos usar o tutorial guiado da própria SonarCloud para completar as configurações, basta clicar em **Follow the tutorial**:
+
+![](https://trello.com/1/cards/61e5d729d8533b4430c9c63f/attachments/61e5dd0d042a591a2249f654/download/image.png)
+
+---
+
+###6. 
+Agora precisamos configurar o TOKEN do SonarCloud no GitHub Actions para que de fato o Git possa se comunicar com o SonarCloud na hora que a pipeline rodar.
+
+![](https://trello.com/1/cards/61e5d729d8533b4430c9c63f/attachments/61e5dd76925c595d5dc4442e/download/image.png)
+
+Aqui você tem a opção de usar o Token que ele está fornecendo ou criar um novo. Vamos criar um novo com o seguinte nome: **GitHubActions DevOpsLab**
+
+![](https://trello.com/1/cards/61e5d729d8533b4430c9c63f/attachments/61e5de6a565aa71f4b437500/download/image.png)
+
+---
+
+###7. 
+Depois basta copiar o hash e adicionar em um Secrets do GitHub:
+
+![](https://trello.com/1/cards/61e5d729d8533b4430c9c63f/attachments/61e5ded824e25420ea20fe1d/download/image.png)
+
+---
+
+###8. 
+ Podemos dar continue e ir para o passo 2 que irá ajustar a pipeline para adicionar o processo de Scan que chamamos de SAST.
+
+![](https://trello.com/1/cards/61e5d729d8533b4430c9c63f/attachments/61e5df72a029f630fbfecfd6/download/image.png)
+
+### Importante entender que esse exemplo não necessariamente está considerando que já temos uma pipeline, então vamos aproveitar o template do Sonar mas inserir em nossa pipeline que já faz deploy com cuidado.
+
+---
+
+###8. 
+Para que você possa comparar seu arquivo com o oficial do Lab. 
+
+---
+
+**Não podemos esquecer de verificar como ficará a ordem dos Jobs!**
+
+---
+
+**Nome do Arquivo:** pipeline.yml
+
+```
 # Nome do Workflow
 name: DevOpsLab Pipeline
 
@@ -24,8 +121,22 @@ jobs:
               
       - name: Unit Test
         run: python -m unittest -v test
+
+  SonarCloud:
+    name: SonarCloud
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
   Deploy:
-    needs: Build
+    needs: [Build,SonarCloud]
     runs-on: ubuntu-latest
 
     steps:
@@ -59,3 +170,41 @@ jobs:
       # Enviando o código da App para o Heroku fazer Deploy
       - name: Push to Heroku & Deploy
         run: git push heroku HEAD:main --force
+
+```
+
+---
+
+###9.  
+Vamos prosseguir para o terceiro e último passo. Aqui precisamos passar as instruções para o sonar-scanner de como rodar e pra onde enviar os dados.
+
+![](https://trello.com/1/cards/61e5d729d8533b4430c9c63f/attachments/61e5e151edd2e726c2868376/download/image.png)
+
+Veja que o arquivo já vem semi preenchido para você por ter usado o wizard.
+
+**Nome do Arquivo:** sonar-project.properties
+
+```
+sonar.projectKey=COLOQUE_PROJECTKEY
+sonar.organization=COLOQUE_A_ORGANIZATION
+
+# This is the name and version displayed in the SonarCloud UI.
+sonar.projectName=COLOQUE_O_NOME_DO_PROJETO
+#sonar.projectVersion=1.0
+
+# Path is relative to the sonar-project.properties file. Replace "\" by "/" on Windows.
+sonar.sources=app.py
+
+# Encoding of the source code. Default is default system encoding
+#sonar.sourceEncoding=UTF-8
+
+sonar.language=py
+sonar.python.version=3.8
+```
+
+---
+
+###10.  
+Agora estamos preparados para o commit e acompanhar o comportamento da nossa pipeline.
+
+**Mensagem do Commit:** SonarCloud - SAST 
