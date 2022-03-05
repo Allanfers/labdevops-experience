@@ -1,4 +1,4 @@
 # DevOps Hands On
 Aplicação Simples em Python/Flask com teste usando Unittest
 
-#tentando reverter commit "bug added"
+# Retorno à etapa Bug Added com sucesso.
