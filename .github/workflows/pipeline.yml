@@ -20,19 +20,10 @@ jobs:
           python-version: '3.7.11'
 
       - name: Install Requirements
-        run:  pip install flask pytest flask-wtf pylint pytest pytest-cov
-
+        run:  pip install flask pytest flask-wtf
+              
       - name: Unit Test
-        run: python -m unittest -v test        
-      
-      # - name: Running pytest
-      #   run: python -m pytest -v --cov --cov-report=xml
-
-      # - uses: actions/upload-artifact@v2
-      #   with:
-      #     name: code-coverage
-      #     path: htmlcov              
- 
+        run: python -m unittest -v test
 
   SonarCloud:
     name: SonarCloud
