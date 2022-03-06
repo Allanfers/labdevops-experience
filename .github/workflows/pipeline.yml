@@ -26,7 +26,12 @@ jobs:
         run: python -m unittest -v test        
       
       - name: Running pytest
-        run: python -m pytest -v --cov --cov-report=xml              
+        run: python -m pytest -v --cov --cov-report=xml
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: code-coverage
+          path: htmlcov              
  
 
   SonarCloud:
