@@ -49,8 +49,8 @@ jobs:
           fetch-depth: 0
 
       - name: New Relic License
-          run: |
-             sed -i "s/licensekey/${{ secrets.NEW_RELIC_LICENSE_KEY }}/g" Dockerfile    
+        run: |
+            sed -i "s/licensekey/${{ secrets.NEW_RELIC_LICENSE_KEY }}/g" Dockerfile    
 
       # Autenticação do Heroku CLI via API TOKEN
       # https://devcenter.heroku.com/articles/authentication
