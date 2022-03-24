@@ -76,7 +76,7 @@ jobs:
           docker push ${{ secrets.ARTIFACT_REGISTRY }}/myapp:latest
 
   Deploy-Hml:
-    needs: Build
+    needs: Build-Hml
     runs-on: ubuntu-latest
 
     steps:
@@ -91,7 +91,7 @@ jobs:
 
 
   Deploy-Prd:
-    needs: Build
+    needs: Build-Prd
     runs-on: ubuntu-latest
 
     steps:
