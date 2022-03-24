@@ -36,7 +36,7 @@ jobs:
 
   Build-Hml:
       needs: [UnitTest]
-      name: Build
+      name: Build-Hml
       runs-on: ubuntu-latest
       steps: 
 
@@ -50,7 +50,7 @@ jobs:
 
   Build-Prd:
       needs: [UnitTest]
-      name: Build
+      name: Build-Prd
       runs-on: ubuntu-latest
       steps: 
 
