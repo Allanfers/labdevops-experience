@@ -34,7 +34,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  Build:
+  Build-Hml:
+      needs: [UnitTest]
+      name: Build
+      runs-on: ubuntu-latest
+      steps: 
+
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+
+      - name: Login to Heroku Container registry
+        env: 
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+        run: heroku container:login
+
+  Build-Prd:
       needs: [UnitTest]
       name: Build
       runs-on: ubuntu-latest
@@ -46,16 +60,6 @@ jobs:
       - name: New Relic License
         run: |
           sed -i "s/licensekey/${{ secrets.NEW_RELIC_LICENSE_KEY }}/g" Dockerfile
-
-      - name: Login to Heroku Container registry
-        env: 
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-        run: heroku container:login
-
-      - name: Docker Image & Push Heroku Registry
-        env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-        run: heroku container:push -a ${{ secrets.HEROKU_APP_NAME }} web
 
       - name: Docker Login
         env:
@@ -71,7 +75,7 @@ jobs:
           docker build -t ${{ secrets.ARTIFACT_REGISTRY }}/myapp:latest .
           docker push ${{ secrets.ARTIFACT_REGISTRY }}/myapp:latest
 
-  Deploy:
+  Deploy-Hml:
     needs: Build
     runs-on: ubuntu-latest
 
@@ -83,6 +87,16 @@ jobs:
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
         run: heroku container:release -a ${{ secrets.HEROKU_APP_NAME }} web
+      
+
+
+  Deploy-Prd:
+    needs: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
 
       - name: Auth GCP AppEngine
         env:
@@ -99,5 +113,5 @@ jobs:
         with:
           image_url: ${{ secrets.ARTIFACT_REGISTRY }}/myapp:latest
 
-      - name: Prod Test
+      - name: Prd Test
         run: 'curl "${{ steps.appengine.outputs.url }}"'
